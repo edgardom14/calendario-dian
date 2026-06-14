@@ -1,0 +1,43 @@
+{
+  "name": "CalendarioDIAN",
+  "short_name": "CalDIAN",
+  "description": "Control de vencimientos tributarios ante la DIAN. Alertas de obligaciones fiscales para contadores colombianos.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#020817",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "lang": "es-CO",
+  "categories": ["finance", "business", "productivity"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "Dashboard de vencimientos"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Ver próximos vencimientos",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ── Utilidades de formulario ── */
+.label {
+  @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-400;
+}
+
+.input-wrapper {
+  @apply relative flex items-center;
+}
+
+.input-icon {
+  @apply pointer-events-none absolute left-3.5 h-4 w-4 text-slate-500;
+}
+
+.input {
+  @apply w-full rounded-xl border border-slate-700 bg-slate-800/60 py-2.5 pl-10 pr-4
+         text-sm text-slate-100 placeholder-slate-600
+         outline-none ring-0 transition
+         focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
+         disabled:opacity-50;
+}
