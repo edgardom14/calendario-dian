@@ -14,6 +14,7 @@ import {
   User,
   Search,
   FileDown,
+  Calendar,
 } from 'lucide-react'
 import EmpresaForm from '@/components/EmpresaForm'
 import EmpresasTable from '@/components/EmpresasTable'
@@ -127,6 +128,13 @@ export default function DashboardClient({ initialEmpresas, estadosPorEmpresa }: 
           >
             <ListChecks className="h-4 w-4" />
             Vencimientos
+          </Link>
+          <Link
+            href="/calendario"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition hover:bg-slate-800 hover:text-slate-200"
+          >
+            <Calendar className="h-4 w-4" />
+            Calendario
           </Link>
           <Link
             href="/perfil"

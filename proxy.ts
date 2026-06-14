@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const RUTAS_PROTEGIDAS = ['/dashboard', '/vencimientos', '/perfil']
+const RUTAS_PROTEGIDAS = ['/dashboard', '/vencimientos', '/perfil', '/calendario']
 const RUTA_LOGIN       = '/login'
 
 export async function proxy(request: NextRequest) {
@@ -48,5 +48,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/vencimientos/:path*', '/perfil/:path*', '/login'],
+  matcher: ['/dashboard/:path*', '/vencimientos/:path*', '/perfil/:path*', '/calendario/:path*', '/login'],
 }
