@@ -1,46 +1,40 @@
-import { supabase } from '@/lib/supabase'
-import type { TipoContribuyente, VencimientoConImpuesto } from '@/lib/types'
+import { createSupabaseBrowser } from '@/lib/supabase-browser'
+import type { TipoContribuyente, VencimientoConEstado } from '@/lib/types'
 
-/**
- * Devuelve los próximos 3 vencimientos para una empresa dado su NIT y tipo
- * de contribuyente, filtrando por el último dígito del NIT y fechas >= hoy.
- *
- * Los grandes contribuyentes tienen calendarios propios (dígito 0 en BD por
- * convención): se filtra igual por dígito pero se deja abierto para ampliar.
- */
 export async function calcularProximosVencimientos(
   nit: string,
   _tipo_contribuyente: TipoContribuyente,
-): Promise<VencimientoConImpuesto[]> {
+  empresa_id: string,
+): Promise<VencimientoConEstado[]> {
   const ultimoDigito = Number(nit.at(-1))
+  if (isNaN(ultimoDigito)) throw new Error(`NIT inválido: "${nit}" no termina en un dígito.`)
 
-  if (isNaN(ultimoDigito)) {
-    throw new Error(`NIT inválido: "${nit}" no termina en un dígito.`)
-  }
+  const hoy = new Date().toISOString().split('T')[0]
+  const supabase = createSupabaseBrowser()
 
-  const hoy = new Date().toISOString().split('T')[0] // "YYYY-MM-DD"
+  const [{ data: venc, error: errVenc }, { data: ev }] = await Promise.all([
+    supabase
+      .from('vencimientos')
+      .select('id, impuesto_id, ultimo_digito_nit, fecha_vencimiento, anio_fiscal, periodo, created_at, impuesto:impuestos ( nombre, periodicidad )')
+      .eq('ultimo_digito_nit', ultimoDigito)
+      .gte('fecha_vencimiento', hoy)
+      .order('fecha_vencimiento', { ascending: true })
+      .limit(3),
+    supabase
+      .from('empresa_vencimientos')
+      .select('id, vencimiento_id, estado')
+      .eq('empresa_id', empresa_id),
+  ])
 
-  const { data, error } = await supabase
-    .from('vencimientos')
-    .select(`
-      id,
-      impuesto_id,
-      ultimo_digito_nit,
-      fecha_vencimiento,
-      anio_fiscal,
-      periodo,
-      created_at,
-      impuesto:impuestos ( nombre, periodicidad )
-    `)
-    .eq('ultimo_digito_nit', ultimoDigito)
-    .gte('fecha_vencimiento', hoy)
-    .order('fecha_vencimiento', { ascending: true })
-    .limit(3)
+  if (errVenc) throw new Error(errVenc.message)
 
-  if (error) throw new Error(error.message)
+  const estadoMap = new Map((ev ?? []).map(r => [r.vencimiento_id, { id: r.id, estado: r.estado }]))
 
-  // Supabase devuelve el join como objeto; casteamos al tipo enriquecido
-  return (data ?? []) as unknown as VencimientoConImpuesto[]
+  return (venc ?? []).map((v: any) => ({
+    ...v,
+    empresa_vencimiento_id: estadoMap.get(v.id)?.id ?? null,
+    estado: estadoMap.get(v.id)?.estado ?? 'pendiente',
+  })) as VencimientoConEstado[]
 }
 
 // ─── Utilidades de presentación ───────────────────────────────────────────────

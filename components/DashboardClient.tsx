@@ -20,7 +20,7 @@ import EmpresasTable from '@/components/EmpresasTable'
 import ObligacionesModal from '@/components/ObligacionesModal'
 import { calcularProximosVencimientos } from '@/lib/dianLogic'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
-import type { Empresa, VencimientoConImpuesto } from '@/lib/types'
+import type { Empresa, VencimientoConEstado } from '@/lib/types'
 
 interface Props {
   initialEmpresas: Empresa[]
@@ -28,7 +28,7 @@ interface Props {
 
 interface ModalState {
   empresa: Empresa | null
-  vencimientos: VencimientoConImpuesto[]
+  vencimientos: VencimientoConEstado[]
   loading: boolean
   error: string | null
 }
@@ -90,6 +90,7 @@ export default function DashboardClient({ initialEmpresas }: Props) {
       const vencimientos = await calcularProximosVencimientos(
         empresa.nit,
         empresa.tipo_contribuyente,
+        empresa.id,
       )
       setModal(prev => ({ ...prev, vencimientos, loading: false }))
     } catch (err) {
@@ -248,6 +249,16 @@ export default function DashboardClient({ initialEmpresas }: Props) {
           loading={modal.loading}
           error={modal.error}
           onClose={handleCloseModal}
+          onUpdateVencimiento={(vencimientoId, ev_id, nuevoEstado) => {
+            setModal(prev => ({
+              ...prev,
+              vencimientos: prev.vencimientos.map(v =>
+                v.id === vencimientoId
+                  ? { ...v, estado: nuevoEstado, empresa_vencimiento_id: ev_id }
+                  : v
+              ),
+            }))
+          }}
         />
       )}
     </div>

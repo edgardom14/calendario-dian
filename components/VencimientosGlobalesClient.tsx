@@ -54,7 +54,7 @@ export default function VencimientosGlobalesClient({ empresas }: Props) {
     await Promise.all(
       empresas.map(async (empresa) => {
         try {
-          const vencimientos = await calcularProximosVencimientos(empresa.nit, empresa.tipo_contribuyente)
+          const vencimientos = await calcularProximosVencimientos(empresa.nit, empresa.tipo_contribuyente, empresa.id)
           vencimientos.forEach(v => {
             resultados.push({
               empresa,

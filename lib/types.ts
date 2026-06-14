@@ -71,6 +71,11 @@ export interface VencimientoConImpuesto extends Vencimiento {
   impuesto: Pick<Impuesto, 'nombre' | 'periodicidad'>
 }
 
+export interface VencimientoConEstado extends VencimientoConImpuesto {
+  empresa_vencimiento_id: string | null
+  estado: EstadoVencimiento
+}
+
 export interface EmpresaVencimientoCompleto extends EmpresaVencimiento {
   empresa: Pick<Empresa, 'razon_social' | 'nit' | 'digito_verificacion' | 'tipo_contribuyente'>
   vencimiento: VencimientoConImpuesto
