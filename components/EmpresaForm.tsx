@@ -25,6 +25,7 @@ interface Props {
 
 export default function EmpresaForm({ onCreated }: Props) {
   const [form, setForm]       = useState<EmpresaInsert>(EMPTY_FORM)
+  const [digitoStr, setDigitoStr] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError]     = useState<string | null>(null)
@@ -60,6 +61,7 @@ export default function EmpresaForm({ onCreated }: Props) {
       const nueva = await insertEmpresa(form)
       onCreated(nueva)
       setForm(EMPTY_FORM)
+      setDigitoStr('')
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
     } catch (err) {
@@ -124,10 +126,11 @@ export default function EmpresaForm({ onCreated }: Props) {
               inputMode="numeric"
               className="input"
               placeholder="7"
-              value={String(form.digito_verificacion)}
+              value={digitoStr}
               maxLength={1}
               onChange={e => {
                 const val = e.target.value.replace(/\D/g, '').slice(0, 1)
+                setDigitoStr(val)
                 setForm(prev => ({ ...prev, digito_verificacion: val === '' ? 0 : Number(val) }))
                 setError(null)
                 setSuccess(false)
