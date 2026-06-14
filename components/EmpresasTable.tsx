@@ -8,6 +8,7 @@ import {
   User,
   Users,
   Inbox,
+  Pencil,
 } from 'lucide-react'
 import type { Empresa, TipoContribuyente } from '@/lib/types'
 import type { EstadosPorEmpresa } from '@/app/dashboard/page'
@@ -51,9 +52,10 @@ interface Props {
   empresas: Empresa[]
   estadosPorEmpresa: EstadosPorEmpresa
   onVerObligaciones: (empresa: Empresa) => void
+  onEditar: (empresa: Empresa) => void
 }
 
-export default function EmpresasTable({ empresas, estadosPorEmpresa, onVerObligaciones }: Props) {
+export default function EmpresasTable({ empresas, estadosPorEmpresa, onVerObligaciones, onEditar }: Props) {
   if (empresas.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-700 bg-slate-800/40 py-16 text-slate-500">
@@ -107,14 +109,23 @@ export default function EmpresasTable({ empresas, estadosPorEmpresa, onVerObliga
                   <BadgesEstado empresaId={empresa.id} estadosPorEmpresa={estadosPorEmpresa} />
                 </td>
                 <td className="px-5 py-4 text-right">
-                  <button
-                    onClick={() => onVerObligaciones(empresa)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3.5 py-1.5 text-xs font-semibold text-blue-400 transition-all hover:bg-blue-500/20 hover:text-blue-300"
-                  >
-                    <CalendarCheck className="h-3.5 w-3.5" />
-                    Ver Obligaciones
-                    <ChevronRight className="h-3 w-3" />
-                  </button>
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => onEditar(empresa)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-600 bg-slate-700/40 px-3 py-1.5 text-xs font-semibold text-slate-300 transition-all hover:bg-slate-700 hover:text-slate-100"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => onVerObligaciones(empresa)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3.5 py-1.5 text-xs font-semibold text-blue-400 transition-all hover:bg-blue-500/20 hover:text-blue-300"
+                    >
+                      <CalendarCheck className="h-3.5 w-3.5" />
+                      Vencimientos
+                      <ChevronRight className="h-3 w-3" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             )
@@ -142,13 +153,20 @@ export default function EmpresasTable({ empresas, estadosPorEmpresa, onVerObliga
                     <BadgesEstado empresaId={empresa.id} estadosPorEmpresa={estadosPorEmpresa} />
                   </div>
                 </div>
-                <button
-                  onClick={() => onVerObligaciones(empresa)}
-                  className="shrink-0 inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs font-semibold text-blue-400 hover:bg-blue-500/20"
-                >
-                  <CalendarCheck className="h-3.5 w-3.5" />
-                  Obligaciones
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => onEditar(empresa)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-slate-600 bg-slate-700/40 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />Editar
+                  </button>
+                  <button
+                    onClick={() => onVerObligaciones(empresa)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs font-semibold text-blue-400 hover:bg-blue-500/20"
+                  >
+                    <CalendarCheck className="h-3.5 w-3.5" />Vencimientos
+                  </button>
+                </div>
               </div>
             </li>
           )

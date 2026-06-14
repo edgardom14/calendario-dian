@@ -19,6 +19,7 @@ import {
 import EmpresaForm from '@/components/EmpresaForm'
 import EmpresasTable from '@/components/EmpresasTable'
 import ObligacionesModal from '@/components/ObligacionesModal'
+import EditarEmpresaModal from '@/components/EditarEmpresaModal'
 import { calcularProximosVencimientos } from '@/lib/dianLogic'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import type { Empresa, VencimientoConEstado } from '@/lib/types'
@@ -44,7 +45,8 @@ export default function DashboardClient({ initialEmpresas, estadosPorEmpresa }: 
   const router = useRouter()
   const [empresas, setEmpresas] = useState<Empresa[]>(initialEmpresas)
   const [formOpen, setFormOpen] = useState(false)
-  const [busqueda, setBusqueda] = useState('')
+  const [busqueda, setBusqueda]         = useState('')
+  const [empresaEditando, setEmpresaEditando] = useState<Empresa | null>(null)
 
   const empresasFiltradas = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
@@ -243,6 +245,7 @@ export default function DashboardClient({ initialEmpresas, estadosPorEmpresa }: 
             empresas={empresasFiltradas}
             estadosPorEmpresa={estadosPorEmpresa}
             onVerObligaciones={handleVerObligaciones}
+            onEditar={setEmpresaEditando}
           />
         </section>
       </main>
@@ -253,6 +256,17 @@ export default function DashboardClient({ initialEmpresas, estadosPorEmpresa }: 
       </footer>
 
       {/* ── Modal de obligaciones ── */}
+      {empresaEditando && (
+        <EditarEmpresaModal
+          empresa={empresaEditando}
+          onClose={() => setEmpresaEditando(null)}
+          onUpdated={updated => {
+            setEmpresas(prev => prev.map(e => e.id === updated.id ? updated : e))
+            setEmpresaEditando(null)
+          }}
+        />
+      )}
+
       {modal.empresa && (
         <ObligacionesModal
           empresa={modal.empresa}
