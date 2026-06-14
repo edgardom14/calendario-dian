@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LogOut,
   ListChecks,
+  User,
 } from 'lucide-react'
 import EmpresaForm from '@/components/EmpresaForm'
 import EmpresasTable from '@/components/EmpresasTable'
@@ -95,7 +96,14 @@ export default function DashboardClient({ initialEmpresas }: Props) {
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition hover:bg-slate-800 hover:text-slate-200"
           >
             <ListChecks className="h-4 w-4" />
-            Todos los vencimientos
+            Vencimientos
+          </Link>
+          <Link
+            href="/perfil"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition hover:bg-slate-800 hover:text-slate-200"
+          >
+            <User className="h-4 w-4" />
+            Mi Perfil
           </Link>
           <button
             onClick={handleSignOut}
