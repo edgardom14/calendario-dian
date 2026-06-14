@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   CalendarCheck,
   Building2,
@@ -15,6 +16,7 @@ import EmpresaForm from '@/components/EmpresaForm'
 import EmpresasTable from '@/components/EmpresasTable'
 import ObligacionesModal from '@/components/ObligacionesModal'
 import { calcularProximosVencimientos } from '@/lib/dianLogic'
+import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import type { Empresa, VencimientoConImpuesto } from '@/lib/types'
 
 interface Props {
@@ -33,8 +35,16 @@ const MODAL_CLOSED: ModalState = {
 }
 
 export default function DashboardClient({ initialEmpresas }: Props) {
+  const router = useRouter()
   const [empresas, setEmpresas] = useState<Empresa[]>(initialEmpresas)
   const [formOpen, setFormOpen] = useState(false)
+
+  async function handleSignOut() {
+    const supabase = createSupabaseBrowser()
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
   const [modal, setModal]       = useState<ModalState>(MODAL_CLOSED)
 
   function handleCreated(nueva: Empresa) {
@@ -87,13 +97,13 @@ export default function DashboardClient({ initialEmpresas }: Props) {
             <ListChecks className="h-4 w-4" />
             Todos los vencimientos
           </Link>
-          <Link
-            href="/"
+          <button
+            onClick={handleSignOut}
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition hover:bg-slate-800 hover:text-slate-200"
           >
             <LogOut className="h-4 w-4" />
-            Salir
-          </Link>
+            Cerrar sesión
+          </button>
         </nav>
       </header>
 
