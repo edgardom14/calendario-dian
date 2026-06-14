@@ -120,13 +120,18 @@ export default function EmpresaForm({ onCreated }: Props) {
             <input
               id="digito_verificacion"
               name="digito_verificacion"
-              type="number"
-              min={0}
-              max={9}
+              type="text"
+              inputMode="numeric"
               className="input"
               placeholder="7"
-              value={form.digito_verificacion}
-              onChange={handleChange}
+              value={String(form.digito_verificacion)}
+              maxLength={1}
+              onChange={e => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 1)
+                setForm(prev => ({ ...prev, digito_verificacion: val === '' ? 0 : Number(val) }))
+                setError(null)
+                setSuccess(false)
+              }}
               required
             />
           </div>
