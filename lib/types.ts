@@ -22,6 +22,7 @@ export type EstadoVencimiento =
 
 export interface Empresa {
   id: string                          // uuid
+  user_id: string                     // fk → auth.users.id
   nit: string                         // sin guiones ni dígito de verificación
   digito_verificacion: number         // 0–9
   razon_social: string
@@ -77,7 +78,7 @@ export interface EmpresaVencimientoCompleto extends EmpresaVencimiento {
 
 // ─── Tipos para formularios (omite campos autogenerados) ──────────────────────
 
-export type EmpresaInsert = Omit<Empresa, 'id' | 'created_at' | 'updated_at'>
+export type EmpresaInsert = Omit<Empresa, 'id' | 'user_id' | 'created_at' | 'updated_at'>
 export type EmpresaUpdate = Partial<EmpresaInsert>
 
 export type ImpuestoInsert = Omit<Impuesto, 'id' | 'created_at'>

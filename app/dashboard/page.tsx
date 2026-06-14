@@ -1,5 +1,5 @@
 import DashboardClient from '@/components/DashboardClient'
-import { getEmpresas } from '@/lib/empresas'
+import { createSupabaseServer } from '@/lib/supabase-server'
 import type { Empresa } from '@/lib/types'
 
 export const metadata = { title: 'Dashboard – CalendarioDIAN' }
@@ -7,9 +7,14 @@ export const metadata = { title: 'Dashboard – CalendarioDIAN' }
 export default async function DashboardPage() {
   let empresas: Empresa[] = []
   try {
-    empresas = await getEmpresas()
+    const supabase = await createSupabaseServer()
+    const { data } = await supabase
+      .from('empresas')
+      .select('*')
+      .order('razon_social', { ascending: true })
+    empresas = data ?? []
   } catch {
-    // Supabase no configurado aún: arranca con lista vacía
+    // arranca con lista vacía si Supabase no responde
   }
 
   return <DashboardClient initialEmpresas={empresas} />
