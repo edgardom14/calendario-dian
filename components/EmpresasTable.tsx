@@ -10,6 +10,7 @@ import {
   Inbox,
 } from 'lucide-react'
 import type { Empresa, TipoContribuyente } from '@/lib/types'
+import type { EstadosPorEmpresa } from '@/app/dashboard/page'
 
 const TIPO_LABEL: Record<TipoContribuyente, { label: string; Icon: React.ElementType; color: string }> = {
   gran_contribuyente: { label: 'Gran Contribuyente', Icon: ShieldCheck, color: 'text-amber-400  bg-amber-400/10  ring-amber-400/25' },
@@ -17,12 +18,42 @@ const TIPO_LABEL: Record<TipoContribuyente, { label: string; Icon: React.Element
   persona_natural:    { label: 'Persona Natural',     Icon: User,        color: 'text-violet-400 bg-violet-400/10 ring-violet-400/25' },
 }
 
+function BadgesEstado({ empresaId, estadosPorEmpresa }: { empresaId: string; estadosPorEmpresa: EstadosPorEmpresa }) {
+  const conteos = estadosPorEmpresa[empresaId]
+  if (!conteos) return <span className="text-xs text-slate-600">Sin seguimiento</span>
+
+  const { pendiente, presentado, pagado } = conteos
+  const total = pendiente + presentado + pagado
+  if (total === 0) return <span className="text-xs text-slate-600">Sin seguimiento</span>
+
+  return (
+    <div className="flex items-center gap-1.5">
+      {pendiente > 0 && (
+        <span className="inline-flex items-center gap-1 rounded-full border border-slate-600 bg-slate-700/40 px-2 py-0.5 text-xs font-medium text-slate-400">
+          {pendiente} pendiente{pendiente !== 1 ? 's' : ''}
+        </span>
+      )}
+      {presentado > 0 && (
+        <span className="inline-flex items-center gap-1 rounded-full border border-blue-500/40 bg-blue-500/10 px-2 py-0.5 text-xs font-medium text-blue-400">
+          {presentado} presentado{presentado !== 1 ? 's' : ''}
+        </span>
+      )}
+      {pagado > 0 && (
+        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400">
+          {pagado} pagado{pagado !== 1 ? 's' : ''}
+        </span>
+      )}
+    </div>
+  )
+}
+
 interface Props {
   empresas: Empresa[]
+  estadosPorEmpresa: EstadosPorEmpresa
   onVerObligaciones: (empresa: Empresa) => void
 }
 
-export default function EmpresasTable({ empresas, onVerObligaciones }: Props) {
+export default function EmpresasTable({ empresas, estadosPorEmpresa, onVerObligaciones }: Props) {
   if (empresas.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-700 bg-slate-800/40 py-16 text-slate-500">
@@ -42,7 +73,7 @@ export default function EmpresasTable({ empresas, onVerObligaciones }: Props) {
             <th className="px-5 py-3.5 text-left">Razón Social</th>
             <th className="px-5 py-3.5 text-left">NIT</th>
             <th className="px-5 py-3.5 text-left">Tipo</th>
-            <th className="px-5 py-3.5 text-left">Correo</th>
+            <th className="px-5 py-3.5 text-left">Estado</th>
             <th className="px-5 py-3.5 text-right">Acciones</th>
           </tr>
         </thead>
@@ -72,7 +103,9 @@ export default function EmpresasTable({ empresas, onVerObligaciones }: Props) {
                     {tipo.label}
                   </span>
                 </td>
-                <td className="px-5 py-4 text-slate-400">{empresa.email_notificacion}</td>
+                <td className="px-5 py-4">
+                  <BadgesEstado empresaId={empresa.id} estadosPorEmpresa={estadosPorEmpresa} />
+                </td>
                 <td className="px-5 py-4 text-right">
                   <button
                     onClick={() => onVerObligaciones(empresa)}
@@ -105,7 +138,9 @@ export default function EmpresasTable({ empresas, onVerObligaciones }: Props) {
                     <tipo.Icon className="h-3.5 w-3.5" />
                     {tipo.label}
                   </span>
-                  <p className="mt-2 text-xs text-slate-500">{empresa.email_notificacion}</p>
+                  <div className="mt-2">
+                    <BadgesEstado empresaId={empresa.id} estadosPorEmpresa={estadosPorEmpresa} />
+                  </div>
                 </div>
                 <button
                   onClick={() => onVerObligaciones(empresa)}

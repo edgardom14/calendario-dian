@@ -21,9 +21,11 @@ import ObligacionesModal from '@/components/ObligacionesModal'
 import { calcularProximosVencimientos } from '@/lib/dianLogic'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import type { Empresa, VencimientoConEstado } from '@/lib/types'
+import type { EstadosPorEmpresa } from '@/app/dashboard/page'
 
 interface Props {
   initialEmpresas: Empresa[]
+  estadosPorEmpresa: EstadosPorEmpresa
 }
 
 interface ModalState {
@@ -37,7 +39,7 @@ const MODAL_CLOSED: ModalState = {
   empresa: null, vencimientos: [], loading: false, error: null,
 }
 
-export default function DashboardClient({ initialEmpresas }: Props) {
+export default function DashboardClient({ initialEmpresas, estadosPorEmpresa }: Props) {
   const router = useRouter()
   const [empresas, setEmpresas] = useState<Empresa[]>(initialEmpresas)
   const [formOpen, setFormOpen] = useState(false)
@@ -231,6 +233,7 @@ export default function DashboardClient({ initialEmpresas }: Props) {
 
           <EmpresasTable
             empresas={empresasFiltradas}
+            estadosPorEmpresa={estadosPorEmpresa}
             onVerObligaciones={handleVerObligaciones}
           />
         </section>
