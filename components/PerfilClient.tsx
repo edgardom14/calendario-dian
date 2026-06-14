@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import {
   CalendarCheck, LayoutDashboard, ListChecks, LogOut,
-  User, Building2, Phone, AtSign, Loader2, CheckCircle2, AlertCircle,
+  User, Building2, Phone, AtSign, Loader2, CheckCircle2, AlertCircle, Lock, Eye, EyeOff,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
@@ -28,9 +28,15 @@ export default function PerfilClient({ email, perfil }: Props) {
     nombre_empresa:  perfil.nombre_empresa  ?? '',
     telefono:        perfil.telefono        ?? '',
   })
-  const [loading, setLoading]   = useState(false)
-  const [success, setSuccess]   = useState(false)
-  const [error, setError]       = useState<string | null>(null)
+  const [loading, setLoading]     = useState(false)
+  const [success, setSuccess]     = useState(false)
+  const [error, setError]         = useState<string | null>(null)
+
+  const [pwd, setPwd]             = useState({ nueva: '', confirmar: '' })
+  const [showPwd, setShowPwd]     = useState(false)
+  const [pwdLoading, setPwdLoading] = useState(false)
+  const [pwdSuccess, setPwdSuccess] = useState(false)
+  const [pwdError, setPwdError]   = useState<string | null>(null)
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -57,6 +63,23 @@ export default function PerfilClient({ email, perfil }: Props) {
       router.refresh()
     }
     setLoading(false)
+  }
+
+  async function handleCambiarPassword(e: React.FormEvent) {
+    e.preventDefault()
+    setPwdError(null)
+    setPwdSuccess(false)
+    if (pwd.nueva.length < 6) { setPwdError('La contraseña debe tener al menos 6 caracteres.'); return }
+    if (pwd.nueva !== pwd.confirmar) { setPwdError('Las contraseñas no coinciden.'); return }
+    setPwdLoading(true)
+    const supabase = createSupabaseBrowser()
+    const { error: err } = await supabase.auth.updateUser({ password: pwd.nueva })
+    if (err) { setPwdError(err.message) } else {
+      setPwdSuccess(true)
+      setPwd({ nueva: '', confirmar: '' })
+      setTimeout(() => setPwdSuccess(false), 3000)
+    }
+    setPwdLoading(false)
   }
 
   async function handleSignOut() {
@@ -189,6 +212,77 @@ export default function PerfilClient({ email, perfil }: Props) {
               >
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {loading ? 'Guardando…' : 'Guardar cambios'}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Sección cambiar contraseña */}
+        <div className="mt-6 rounded-2xl border border-slate-700/60 bg-slate-900/60 p-8 shadow-xl shadow-black/20">
+          <h2 className="mb-1 text-base font-semibold text-slate-100">Cambiar contraseña</h2>
+          <p className="mb-6 text-xs text-slate-500">Elige una contraseña nueva de al menos 6 caracteres.</p>
+
+          <form onSubmit={handleCambiarPassword} className="space-y-4">
+            <div>
+              <label className="label" htmlFor="pwd_nueva">Nueva contraseña</label>
+              <div className="input-wrapper">
+                <Lock className="input-icon" />
+                <input
+                  id="pwd_nueva"
+                  type={showPwd ? 'text' : 'password'}
+                  className="input pr-11"
+                  placeholder="Mínimo 6 caracteres"
+                  value={pwd.nueva}
+                  onChange={e => setPwd(p => ({ ...p, nueva: e.target.value }))}
+                  minLength={6}
+                  required
+                  autoComplete="new-password"
+                />
+                <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute right-3.5 text-slate-500 hover:text-slate-300 transition-colors">
+                  {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="label" htmlFor="pwd_confirmar">Confirmar contraseña</label>
+              <div className="input-wrapper">
+                <Lock className="input-icon" />
+                <input
+                  id="pwd_confirmar"
+                  type={showPwd ? 'text' : 'password'}
+                  className="input"
+                  placeholder="Repite la nueva contraseña"
+                  value={pwd.confirmar}
+                  onChange={e => setPwd(p => ({ ...p, confirmar: e.target.value }))}
+                  minLength={6}
+                  required
+                  autoComplete="new-password"
+                />
+              </div>
+            </div>
+
+            {pwdError && (
+              <div className="flex items-start gap-2.5 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                {pwdError}
+              </div>
+            )}
+            {pwdSuccess && (
+              <div className="flex items-center gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+                Contraseña actualizada correctamente.
+              </div>
+            )}
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="submit"
+                disabled={pwdLoading}
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-700 px-7 py-2.5 text-sm font-semibold text-slate-100 transition-all hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {pwdLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {pwdLoading ? 'Guardando…' : 'Cambiar contraseña'}
               </button>
             </div>
           </form>

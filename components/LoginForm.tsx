@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { CalendarCheck, AtSign, Lock, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 
-type Mode = 'login' | 'register'
+type Mode = 'login' | 'register' | 'recover'
 
 export default function LoginForm() {
   const router       = useRouter()
@@ -31,28 +31,27 @@ export default function LoginForm() {
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
-        setError(
-          error.message === 'Invalid login credentials'
-            ? 'Correo o contraseña incorrectos.'
-            : error.message
-        )
+        setError(error.message === 'Invalid login credentials' ? 'Correo o contraseña incorrectos.' : error.message)
         setLoading(false)
         return
       }
       router.push(next)
       router.refresh()
-    } else {
+    } else if (mode === 'register') {
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       })
-      if (error) {
-        setError(error.message)
-        setLoading(false)
-        return
-      }
+      if (error) { setError(error.message); setLoading(false); return }
       setSuccess('Revisa tu correo para confirmar el registro.')
+      setLoading(false)
+    } else {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      })
+      if (error) { setError(error.message); setLoading(false); return }
+      setSuccess('Te enviamos un enlace para restablecer tu contraseña. Revisa tu correo.')
       setLoading(false)
     }
   }
@@ -80,7 +79,7 @@ export default function LoginForm() {
               key={m}
               onClick={() => { setMode(m); setError(null); setSuccess(null) }}
               className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
-                mode === m
+                mode === m || (mode === 'recover' && m === 'login')
                   ? 'bg-blue-600 text-white shadow'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
@@ -89,6 +88,12 @@ export default function LoginForm() {
             </button>
           ))}
         </div>
+
+        {mode === 'recover' && (
+          <div className="mb-4 rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-xs text-blue-400">
+            Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
@@ -154,8 +159,27 @@ export default function LoginForm() {
             className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60 mt-2"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {loading ? 'Procesando…' : mode === 'login' ? 'Ingresar al Dashboard' : 'Crear cuenta'}
+            {loading ? 'Procesando…' : mode === 'login' ? 'Ingresar al Dashboard' : mode === 'register' ? 'Crear cuenta' : 'Enviar enlace'}
           </button>
+
+          {mode === 'login' && (
+            <button
+              type="button"
+              onClick={() => { setMode('recover'); setError(null); setSuccess(null) }}
+              className="mt-3 w-full text-center text-xs text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          )}
+          {mode === 'recover' && (
+            <button
+              type="button"
+              onClick={() => { setMode('login'); setError(null); setSuccess(null) }}
+              className="mt-3 w-full text-center text-xs text-slate-500 hover:text-slate-300 transition-colors"
+            >
+              Volver al inicio de sesión
+            </button>
+          )}
         </form>
       </div>
 
