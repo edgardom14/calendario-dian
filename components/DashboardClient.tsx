@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -12,6 +12,8 @@ import {
   LogOut,
   ListChecks,
   User,
+  Search,
+  FileDown,
 } from 'lucide-react'
 import EmpresaForm from '@/components/EmpresaForm'
 import EmpresasTable from '@/components/EmpresasTable'
@@ -39,6 +41,31 @@ export default function DashboardClient({ initialEmpresas }: Props) {
   const router = useRouter()
   const [empresas, setEmpresas] = useState<Empresa[]>(initialEmpresas)
   const [formOpen, setFormOpen] = useState(false)
+  const [busqueda, setBusqueda] = useState('')
+
+  const empresasFiltradas = useMemo(() => {
+    const q = busqueda.trim().toLowerCase()
+    if (!q) return empresas
+    return empresas.filter(e =>
+      e.razon_social.toLowerCase().includes(q) || e.nit.includes(q)
+    )
+  }, [empresas, busqueda])
+
+  function exportarExcel() {
+    import('xlsx').then(XLSX => {
+      const filas = empresas.map(e => ({
+        'Razón Social':        e.razon_social,
+        'NIT':                 `${e.nit}-${e.digito_verificacion}`,
+        'Tipo Contribuyente':  e.tipo_contribuyente,
+        'Correo Notificación': e.email_notificacion,
+        'Registrada':          new Date(e.created_at).toLocaleDateString('es-CO'),
+      }))
+      const ws = XLSX.utils.json_to_sheet(filas)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Empresas')
+      XLSX.writeFile(wb, `empresas-calendariodian-${new Date().toISOString().slice(0, 10)}.xlsx`)
+    })
+  }
 
   async function handleSignOut() {
     const supabase = createSupabaseBrowser()
@@ -164,14 +191,45 @@ export default function DashboardClient({ initialEmpresas }: Props) {
 
         {/* ── Sección: Tabla de empresas ── */}
         <section>
-          <div className="mb-4 flex items-center gap-2.5">
-            <Building2 className="h-4 w-4 text-slate-400" />
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
-              Listado de Empresas
-            </h2>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2.5">
+              <Building2 className="h-4 w-4 text-slate-400" />
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+                Listado de Empresas
+              </h2>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Búsqueda */}
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre o NIT…"
+                  value={busqueda}
+                  onChange={e => setBusqueda(e.target.value)}
+                  className="w-56 rounded-xl border border-slate-700 bg-slate-800/60 py-2 pl-9 pr-4 text-sm text-slate-200 placeholder-slate-500 outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30"
+                />
+              </div>
+              {/* Exportar Excel */}
+              <button
+                onClick={exportarExcel}
+                disabled={empresas.length === 0}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-xs font-semibold text-emerald-400 transition-all hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <FileDown className="h-3.5 w-3.5" />
+                Excel
+              </button>
+            </div>
           </div>
+
+          {busqueda && (
+            <p className="mb-3 text-xs text-slate-500">
+              {empresasFiltradas.length} resultado{empresasFiltradas.length !== 1 ? 's' : ''} para &ldquo;{busqueda}&rdquo;
+            </p>
+          )}
+
           <EmpresasTable
-            empresas={empresas}
+            empresas={empresasFiltradas}
             onVerObligaciones={handleVerObligaciones}
           />
         </section>
