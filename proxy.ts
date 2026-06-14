@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 const RUTAS_PROTEGIDAS = ['/dashboard', '/vencimientos']
 const RUTA_LOGIN       = '/login'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -26,13 +26,11 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresca la sesión (obligatorio en middleware con SSR)
   const { data: { user } } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
   const esRutaProtegida = RUTAS_PROTEGIDAS.some(r => pathname.startsWith(r))
 
-  // Sin sesión intentando acceder a ruta protegida → redirige al login
   if (!user && esRutaProtegida) {
     const url = request.nextUrl.clone()
     url.pathname = RUTA_LOGIN
@@ -40,7 +38,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Con sesión intentando acceder al login → redirige al dashboard
   if (user && pathname === RUTA_LOGIN) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
