@@ -6,12 +6,13 @@ import { useRouter } from 'next/navigation'
 import {
   CalendarCheck, Building2, Plus, ChevronDown, LayoutDashboard,
   LogOut, ListChecks, User, Search, FileDown, Calendar,
-  CheckCircle2, Clock, CircleDollarSign, TrendingUp,
+  CheckCircle2, Clock, CircleDollarSign, TrendingUp, FileUp,
 } from 'lucide-react'
 import EmpresaForm from '@/components/EmpresaForm'
 import EmpresasTable from '@/components/EmpresasTable'
 import ObligacionesModal from '@/components/ObligacionesModal'
 import EditarEmpresaModal from '@/components/EditarEmpresaModal'
+import ImportarEmpresasModal from '@/components/ImportarEmpresasModal'
 import { calcularProximosVencimientos } from '@/lib/dianLogic'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import type { Empresa, VencimientoConEstado } from '@/lib/types'
@@ -43,7 +44,8 @@ export default function DashboardClient({ initialEmpresas, estadosPorEmpresa }: 
   const [empresas, setEmpresas]               = useState<Empresa[]>(initialEmpresas)
   const [formOpen, setFormOpen]               = useState(false)
   const [busqueda, setBusqueda]               = useState('')
-  const [empresaEditando, setEmpresaEditando] = useState<Empresa | null>(null)
+  const [empresaEditando,  setEmpresaEditando]  = useState<Empresa | null>(null)
+  const [importarOpen,    setImportarOpen]    = useState(false)
   const [modal, setModal]                     = useState<ModalState>(MODAL_CLOSED)
 
   /* ── KPIs globales ── */
@@ -281,7 +283,14 @@ export default function DashboardClient({ initialEmpresas, estadosPorEmpresa }: 
                 className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-3.5 py-2 text-xs font-semibold text-emerald-400 transition hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <FileDown className="h-3.5 w-3.5" />
-                Excel
+                Exportar
+              </button>
+              <button
+                onClick={() => setImportarOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-blue-500/25 bg-blue-500/8 px-3.5 py-2 text-xs font-semibold text-blue-400 transition hover:bg-blue-500/15"
+              >
+                <FileUp className="h-3.5 w-3.5" />
+                Importar
               </button>
             </div>
           </div>
@@ -300,6 +309,17 @@ export default function DashboardClient({ initialEmpresas, estadosPorEmpresa }: 
       </footer>
 
       {/* Modales */}
+      {importarOpen && (
+        <ImportarEmpresasModal
+          onClose={() => setImportarOpen(false)}
+          onImported={nuevas => {
+            setEmpresas(prev =>
+              [...prev, ...nuevas].sort((a, b) => a.razon_social.localeCompare(b.razon_social))
+            )
+          }}
+        />
+      )}
+
       {empresaEditando && (
         <EditarEmpresaModal
           empresa={empresaEditando}

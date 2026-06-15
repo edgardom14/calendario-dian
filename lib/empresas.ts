@@ -28,7 +28,28 @@ export async function insertEmpresa(payload: EmpresaInsert): Promise<Empresa> {
     .single()
 
   if (error) throw new Error(error.message)
-  return data
+  const empresa = data as Empresa
+
+  /* Auto-asignar obligación de renta según tipo */
+  const nombreRenta =
+    payload.tipo_contribuyente === 'persona_natural'
+      ? 'Renta personas naturales'
+      : 'Renta personas jurídicas'
+
+  const { data: imp } = await supabase
+    .from('impuestos')
+    .select('id')
+    .eq('nombre', nombreRenta)
+    .single()
+
+  if (imp) {
+    await supabase
+      .from('empresa_impuestos')
+      .insert({ empresa_id: empresa.id, impuesto_id: imp.id })
+      .maybeSingle()
+  }
+
+  return empresa
 }
 
 export async function deleteEmpresa(id: string): Promise<void> {
