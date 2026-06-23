@@ -12,29 +12,36 @@ export async function calcularProximosVencimientos(
   const hoy = new Date().toISOString().split('T')[0]
   const supabase = createSupabaseBrowser()
 
-  const [{ data: venc, error: errVenc }, { data: ev }] = await Promise.all([
+  const [{ data: venc, error: errVenc }, { data: ev }, { data: ei }] = await Promise.all([
     supabase
       .from('vencimientos')
       .select('id, impuesto_id, ultimo_digito_nit, fecha_vencimiento, anio_fiscal, periodo, created_at, impuesto:impuestos ( nombre, periodicidad )')
       .eq('ultimo_digito_nit', ultimoDigito)
       .gte('fecha_vencimiento', hoy)
-      .order('fecha_vencimiento', { ascending: true })
-      .limit(3),
+      .order('fecha_vencimiento', { ascending: true }),
     supabase
       .from('empresa_vencimientos')
       .select('id, vencimiento_id, estado')
+      .eq('empresa_id', empresa_id),
+    supabase
+      .from('empresa_impuestos')
+      .select('impuesto_id')
       .eq('empresa_id', empresa_id),
   ])
 
   if (errVenc) throw new Error(errVenc.message)
 
+  const impuestosActivos = new Set((ei ?? []).map(r => r.impuesto_id))
   const estadoMap = new Map((ev ?? []).map(r => [r.vencimiento_id, { id: r.id, estado: r.estado }]))
 
-  return (venc ?? []).map((v: any) => ({
-    ...v,
-    empresa_vencimiento_id: estadoMap.get(v.id)?.id ?? null,
-    estado: estadoMap.get(v.id)?.estado ?? 'pendiente',
-  })) as VencimientoConEstado[]
+  return (venc ?? [])
+    .filter((v: any) => impuestosActivos.size === 0 || impuestosActivos.has(v.impuesto_id))
+    .slice(0, 3)
+    .map((v: any) => ({
+      ...v,
+      empresa_vencimiento_id: estadoMap.get(v.id)?.id ?? null,
+      estado: estadoMap.get(v.id)?.estado ?? 'pendiente',
+    })) as VencimientoConEstado[]
 }
 
 // ─── Utilidades de presentación ───────────────────────────────────────────────

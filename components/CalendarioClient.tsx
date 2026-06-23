@@ -9,7 +9,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase-browser'
 import type { Empresa } from '@/lib/types'
-import type { VencimientoCalendario, EstadoCalendario } from '@/app/calendario/page'
+import type { VencimientoCalendario, EstadoCalendario, EmpresaImpuestoCalendario } from '@/app/calendario/page'
 
 const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
@@ -25,9 +25,10 @@ interface Props {
   empresas: Pick<Empresa, 'id' | 'nit' | 'razon_social' | 'tipo_contribuyente'>[]
   vencimientos: VencimientoCalendario[]
   estadosIniciales: EstadoCalendario[]
+  empresaImpuestos: EmpresaImpuestoCalendario[]
 }
 
-export default function CalendarioClient({ empresas, vencimientos, estadosIniciales }: Props) {
+export default function CalendarioClient({ empresas, vencimientos, estadosIniciales, empresaImpuestos }: Props) {
   const router = useRouter()
   const hoy = new Date()
   const [año, setAño]     = useState(hoy.getFullYear())
@@ -38,6 +39,16 @@ export default function CalendarioClient({ empresas, vencimientos, estadosInicia
     await createSupabaseBrowser().auth.signOut()
     router.push('/login')
   }
+
+  // Mapa empresaId → Set de impuesto_ids activos
+  const impuestosPorEmpresa = useMemo(() => {
+    const map = new Map<string, Set<string>>()
+    for (const { empresa_id, impuesto_id } of empresaImpuestos) {
+      if (!map.has(empresa_id)) map.set(empresa_id, new Set())
+      map.get(empresa_id)!.add(impuesto_id)
+    }
+    return map
+  }, [empresaImpuestos])
 
   // Mapa digito → empresas que tienen ese último dígito
   const empresasPorDigito = useMemo(() => {
@@ -57,11 +68,14 @@ export default function CalendarioClient({ empresas, vencimientos, estadosInicia
     return map
   }, [estadosIniciales])
 
-  // Mapa fecha → obligaciones del día
+  // Mapa fecha → obligaciones del día (solo empresas que tienen el impuesto asignado)
   const obligacionesPorFecha = useMemo(() => {
     const map = new Map<string, ObligacionDia[]>()
     for (const v of vencimientos) {
-      const emps = empresasPorDigito.get(v.ultimo_digito_nit) ?? []
+      const emps = (empresasPorDigito.get(v.ultimo_digito_nit) ?? []).filter(e => {
+        const activos = impuestosPorEmpresa.get(e.id)
+        return activos ? activos.has(v.impuesto_id) : false
+      })
       if (emps.length === 0) continue
       const obs: ObligacionDia = {
         vencimientoId: v.id,
@@ -77,7 +91,7 @@ export default function CalendarioClient({ empresas, vencimientos, estadosInicia
       map.get(v.fecha)!.push(obs)
     }
     return map
-  }, [vencimientos, empresasPorDigito, estadoMap])
+  }, [vencimientos, empresasPorDigito, estadoMap, impuestosPorEmpresa])
 
   // Días del mes actual en la grilla
   const diasGrilla = useMemo(() => {
